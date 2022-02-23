@@ -10,7 +10,8 @@ const pokeTypeTwo = document.querySelector('.poke-type-two')
 const pokeWeight = document.querySelector('.poke-weight')
 const pokeHeight = document.querySelector('.poke-height')
 const pokeListItems = document.querySelectorAll('.list-item')
-
+const leftButton = document.querySelector('.left-button')
+const rightButton = document.querySelector('.right-button')
 
 
 // constants and variables
@@ -23,6 +24,9 @@ const TYPES = [
     'dragon', 'dark', 'fairy'
   ];
 
+let prevUrl = null;
+let nextUrl = null;
+
 // Functions
 
 const capitalize = (str) => str[0].toUpperCase() + str.substr(1)
@@ -31,6 +35,46 @@ const resetScreen = () => {
     mainScreen.classList.remove('hide')
     for (const type of TYPES) {
         mainScreen.classList.remove(type)
+    }
+}
+
+
+// get data for right side of screen
+const fetchPokeList = url => {  
+fetch(url)
+.then(res => res.json())
+.then(data => {
+   const { results, previous, next } = data
+   prevUrl = previous;
+   nextUrl = next
+
+   for (let i = 0; i < pokeListItems.length; i++) {
+        const pokeListItem = pokeListItems[i]
+        const resultData = results[i]
+
+        if (resultData) {  
+           const { name, url } = resultData
+           const  urlArray = url.split('/')
+           const id = urlArray[urlArray.length - 2]
+           pokeListItem.textContent = id + '. ' + capitalize(name)
+        } else 
+        {
+           pokeListItem.textContent = ''
+        }
+   }
+})
+}
+
+const handleLeftButtonClick = () => {
+    if (prevUrl) {
+        fetchPokeList(prevUrl)
+    }
+}
+
+
+const handleRightButtonClick = () => {
+    if (nextUrl) {
+        fetchPokeList(nextUrl)
     }
 }
 
@@ -63,23 +107,11 @@ fetch('https://pokeapi.co/api/v2/pokemon/15')
  })
 
 
-// get data for right side of screen
-fetch('https://pokeapi.co/api/v2/pokemon?offset=0&limit=20')
- .then(res => res.json())
- .then(data => {
-    const { results } = data
 
-    for (let i = 0; i < pokeListItems.length; i++) {
-         const pokeListItem = pokeListItems[i]
-         const resultData = results[i]
 
-         if (resultData) {  
-            const { name, url } = resultData
-            const  urlArray = url.split('/')
-            pokeListItem.textContent = capitalize(name)
-         } else 
-         {
-            pokeListItem.textContent = ''
-         }
-    }
-})
+// adding event listeners
+leftButton.addEventListener('click', handleLeftButtonClick)
+rightButton.addEventListener('click', handleRightButtonClick)
+
+// initialize App
+fetchPokeList('https://pokeapi.co/api/v2/pokemon?offset=0&limit=20');
